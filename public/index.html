@@ -47,7 +47,7 @@
       <div>
         <p class="eyebrow">Localiser vite, acheter mieux</p>
         <h1>La viande de porc la plus proche, en quelques secondes.</h1>
-        <p class="lead">DETECPORC compare les points de vente autour de toi, affiche les distances, les horaires et les contacts pour commander rapidement.</p>
+        <p class="lead">DETECPORC compare les points de vente autour de toi, affiche les distances, le temps estime et les contacts pour commander rapidement.</p>
         <div class="hero-actions">
           <button id="btn-manual" class="btn btn-light">
             <i class="bi bi-geo-alt-fill"></i>
@@ -149,6 +149,30 @@
       <div>© DETECPORC — Trouver la viande de porc la plus proche</div>
     </div>
   </footer>
+
+  <div id="coord-modal" class="coord-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="coord-title">
+    <div class="coord-card">
+      <div class="coord-header">
+        <h2 id="coord-title">Saisir mes coordonnees</h2>
+        <p>Entre une latitude et une longitude valides pour calculer les distances.</p>
+      </div>
+      <form id="coord-form" class="coord-form">
+        <label>
+          <span>Latitude</span>
+          <input id="coord-lat" type="number" step="0.00001" placeholder="ex: 6.4969" required />
+        </label>
+        <label>
+          <span>Longitude</span>
+          <input id="coord-lng" type="number" step="0.00001" placeholder="ex: 2.6036" required />
+        </label>
+        <div id="coord-error" class="text-danger small" role="status" aria-live="polite"></div>
+        <div class="coord-actions">
+          <button id="coord-cancel" class="btn btn-outline-secondary" type="button">Annuler</button>
+          <button class="btn btn-primary" type="submit">Valider</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

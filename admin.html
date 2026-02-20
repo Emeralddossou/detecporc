@@ -26,7 +26,7 @@
 
     <section id="login-panel" class="admin-panel">
       <h2>Connexion admin</h2>
-      <form id="login-form" class="admin-form">
+      <form id="login-form" class="admin-form" aria-describedby="login-error">
         <label>
           <span>Identifiant</span>
           <input id="login-user" type="text" autocomplete="username" required />
@@ -36,7 +36,7 @@
           <input id="login-pass" type="password" autocomplete="current-password" required />
         </label>
         <button class="btn btn-primary" type="submit">Se connecter</button>
-        <div id="login-error" class="text-danger small"></div>
+        <div id="login-error" class="text-danger small" role="status" aria-live="polite"></div>
       </form>
     </section>
 
@@ -44,7 +44,7 @@
       <div class="panel-header">
         <div>
           <h2>Liste des points</h2>
-          <p class="admin-subtitle">Ajoute, modifie ou supprime un point. Les changements sont immediats.</p>
+          <p class="admin-subtitle">Ajoute, modifie ou supprime un point. Les changements sont immediats et visibles sur la carte publique.</p>
         </div>
         <div class="panel-actions">
           <input id="search-input" type="text" placeholder="Rechercher un point" />

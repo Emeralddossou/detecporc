@@ -89,6 +89,12 @@ body {
   font-size: 1rem;
 }
 
+.admin-form input:focus,
+.admin-form textarea:focus {
+  outline: 2px solid rgba(209, 96, 61, 0.4);
+  border-color: var(--accent);
+}
+
 .panel-header {
   display: flex;
   align-items: center;
@@ -112,7 +118,7 @@ body {
 
 .admin-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
 }
 
@@ -132,6 +138,56 @@ body {
   border: 1px solid var(--border);
   padding: 14px;
   background: #fffdfb;
+}
+
+.point-card .point-actions {
+  flex-wrap: wrap;
+}
+
+.points-list {
+  max-height: 520px;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.points-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.points-list::-webkit-scrollbar-thumb {
+  background: #d9b8aa;
+  border-radius: 999px;
+}
+
+.admin-panel h2 {
+  margin-top: 0;
+}
+
+.admin-panel p {
+  color: var(--muted);
+}
+
+.admin-form textarea {
+  resize: vertical;
+}
+
+@media (min-width: 900px) {
+  #point-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #point-form label {
+    grid-column: span 1;
+  }
+
+  #point-form label:nth-last-child(2) {
+    grid-column: span 2;
+  }
+
+  #point-form .form-actions,
+  #point-form #form-status {
+    grid-column: span 2;
+  }
 }
 
 .point-card h3 {

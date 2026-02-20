@@ -22,7 +22,13 @@ const elements = {
   statNearestName: document.getElementById('stat-nearest-name'),
   mapStatus: document.getElementById('map-status'),
   filterSearch: document.getElementById('filter-search'),
-  filterDistance: document.getElementById('filter-distance')
+  filterDistance: document.getElementById('filter-distance'),
+  coordModal: document.getElementById('coord-modal'),
+  coordForm: document.getElementById('coord-form'),
+  coordLat: document.getElementById('coord-lat'),
+  coordLng: document.getElementById('coord-lng'),
+  coordError: document.getElementById('coord-error'),
+  coordCancel: document.getElementById('coord-cancel')
 };
 
 function toRad(deg) {
@@ -45,6 +51,24 @@ function formatDistance(meters) {
   if (meters == null) return '-';
   if (meters < 1000) return `${Math.round(meters)} m`;
   return `${(meters / 1000).toFixed(2)} km`;
+}
+
+function formatDuration(minutes) {
+  if (!Number.isFinite(minutes)) return '-';
+  if (minutes < 60) return `${Math.round(minutes)} min`;
+  const hours = Math.floor(minutes / 60);
+  const remain = Math.round(minutes % 60);
+  return `${hours} h ${remain} min`;
+}
+
+function estimateTravel(distanceMeters) {
+  if (distanceMeters == null) return { walk: '-', moto: '-' };
+  const walkMinutes = distanceMeters / 1000 / 5 * 60;
+  const motoMinutes = distanceMeters / 1000 / 25 * 60;
+  return {
+    walk: formatDuration(walkMinutes),
+    moto: formatDuration(motoMinutes)
+  };
 }
 
 function initMap() {
@@ -116,6 +140,7 @@ function updateMapMarkers(list) {
   markersLayer.clearLayers();
 
   list.forEach((item) => {
+    const eta = estimateTravel(item.distance);
     const marker = L.marker([item.lat, item.lng], {
       customId: item.id
     }).addTo(markersLayer);
@@ -127,6 +152,9 @@ function updateMapMarkers(list) {
         <div style="margin-top:4px" class="small">${item.telephone || ''}</div>
         <div style="margin-top:6px; font-weight:600; color:#6b3f2b">
           ${formatDistance(item.distance)}
+        </div>
+        <div style="margin-top:4px" class="small">
+          Marche: ${eta.walk} · Moto: ${eta.moto}
         </div>
       </div>
     `;
@@ -179,6 +207,7 @@ function updateUI() {
       return a.distance - b.distance;
     })
     .forEach((item) => {
+      const eta = estimateTravel(item.distance);
       const card = document.createElement('div');
       card.className = 'place-card';
       card.setAttribute('role', 'listitem');
@@ -199,12 +228,17 @@ function updateUI() {
         <div><i class="bi bi-clock"></i> ${item.horaires || 'Horaires non renseignes'}</div>
       `;
 
+      const travel = document.createElement('div');
+      travel.className = 'place-meta';
+      travel.textContent = `Marche: ${eta.walk} · Moto: ${eta.moto}`;
+
       const comment = document.createElement('div');
       comment.className = 'place-meta';
       comment.textContent = item.commentaire || '';
 
       card.appendChild(title);
       card.appendChild(meta);
+      card.appendChild(travel);
       if (item.commentaire) card.appendChild(comment);
 
       card.addEventListener('click', () => {
@@ -286,26 +320,55 @@ function setupUI() {
 
   document.getElementById('btn-show-all').addEventListener('click', () => {
     if (!points.length) return;
-    const lats = points.map((p) => p.lat);
-    const lngs = points.map((p) => p.lng);
-    const bounds = L.latLngBounds([
-      [Math.min(...lats), Math.min(...lngs)],
-      [Math.max(...lats), Math.max(...lngs)]
-    ]);
-    map.fitBounds(bounds.pad(0.2));
+    elements.filterSearch.value = '';
+    elements.filterDistance.value = '';
+    updateUI();
+    updateBounds(points);
   });
 
   document.getElementById('btn-manual').addEventListener('click', () => {
-    const lat = parseFloat(prompt('Saisis la latitude (ex: 6.4969) :'));
-    if (Number.isNaN(lat)) return;
-    const lng = parseFloat(prompt('Saisis la longitude (ex: 2.6036) :'));
-    if (Number.isNaN(lng)) return;
-    userPosition = { lat, lng };
-    updateUI();
+    elements.coordError.textContent = '';
+    elements.coordForm.reset();
+    elements.coordModal.classList.add('is-open');
+    elements.coordModal.setAttribute('aria-hidden', 'false');
+    elements.coordLat.focus();
   });
 
   elements.filterSearch.addEventListener('input', updateUI);
   elements.filterDistance.addEventListener('input', updateUI);
+
+  elements.coordCancel.addEventListener('click', () => {
+    elements.coordModal.classList.remove('is-open');
+    elements.coordModal.setAttribute('aria-hidden', 'true');
+  });
+
+  elements.coordModal.addEventListener('click', (event) => {
+    if (event.target === elements.coordModal) {
+      elements.coordModal.classList.remove('is-open');
+      elements.coordModal.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  elements.coordForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const lat = parseFloat(elements.coordLat.value);
+    const lng = parseFloat(elements.coordLng.value);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      elements.coordError.textContent = 'Coordonnees invalides. Verifie les valeurs.';
+      return;
+    }
+    userPosition = { lat, lng };
+    elements.coordModal.classList.remove('is-open');
+    elements.coordModal.setAttribute('aria-hidden', 'true');
+    updateUI();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && elements.coordModal.classList.contains('is-open')) {
+      elements.coordModal.classList.remove('is-open');
+      elements.coordModal.setAttribute('aria-hidden', 'true');
+    }
+  });
 }
 
 (function main() {

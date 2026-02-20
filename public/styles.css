@@ -329,6 +329,61 @@ a {
   color: var(--accent-strong);
 }
 
+.coord-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 12, 8, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+
+.coord-modal.is-open {
+  display: flex;
+}
+
+.coord-card {
+  width: min(480px, 100%);
+  background: #fffdfb;
+  border-radius: 20px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.coord-header p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.coord-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.coord-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.coord-form input {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+}
+
+.coord-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 991px) {
   .map-panel,
   .list-panel {
