@@ -95,6 +95,26 @@ body {
   border-color: var(--accent);
 }
 
+.coord-location {
+  background: #fff6ed;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.coord-location-title {
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+
+.coord-location-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .panel-header {
   display: flex;
   align-items: center;
@@ -148,6 +168,31 @@ body {
   max-height: 520px;
   overflow: auto;
   padding-right: 6px;
+}
+
+.admin-map {
+  height: 220px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.pending-panel {
+  margin-top: 18px;
+  background: #fff6ed;
+  border-radius: 16px;
+  border: 1px dashed var(--border);
+  padding: 12px;
+}
+
+.pending-panel h3 {
+  font-size: 1rem;
+  margin-top: 0;
+}
+
+.admin-map.map-pick {
+  cursor: crosshair;
+  box-shadow: 0 0 0 3px rgba(246, 200, 95, 0.45);
 }
 
 .points-list::-webkit-scrollbar {

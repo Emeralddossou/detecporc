@@ -56,6 +56,10 @@
           <button id="btn-show-all" class="btn btn-outline-secondary">
             Montrer tous les points
           </button>
+          <button id="btn-suggest" class="btn btn-outline-dark">
+            <i class="bi bi-plus-circle"></i>
+            Ajouter un nouveau point
+          </button>
         </div>
       </div>
       <div class="hero-stats" aria-live="polite">
@@ -157,6 +161,15 @@
         <p>Entre une latitude et une longitude valides pour calculer les distances.</p>
       </div>
       <form id="coord-form" class="coord-form">
+        <div class="coord-location">
+          <div class="coord-location-title">Localisation</div>
+          <div class="coord-location-actions">
+            <button id="coord-auto" class="btn btn-outline-secondary btn-sm" type="button">Utiliser ma position</button>
+            <button id="coord-map" class="btn btn-outline-secondary btn-sm" type="button">Choisir sur la carte</button>
+            <button id="coord-manual" class="btn btn-outline-secondary btn-sm" type="button">Saisir manuellement</button>
+          </div>
+          <div id="coord-status" class="small text-muted">Localisation automatique en cours...</div>
+        </div>
         <label>
           <span>Latitude</span>
           <input id="coord-lat" type="number" step="0.00001" placeholder="ex: 6.4969" required />
@@ -169,6 +182,59 @@
         <div class="coord-actions">
           <button id="coord-cancel" class="btn btn-outline-secondary" type="button">Annuler</button>
           <button class="btn btn-primary" type="submit">Valider</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="suggest-modal" class="coord-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="suggest-title">
+    <div class="coord-card">
+      <div class="coord-header">
+        <h2 id="suggest-title">Proposer un nouveau point</h2>
+        <p>Ta proposition sera verifiee par un admin avant publication.</p>
+      </div>
+      <form id="suggest-form" class="coord-form">
+        <label>
+          <span>Nom du point</span>
+          <input id="suggest-name" type="text" required />
+        </label>
+        <label>
+          <span>Adresse</span>
+          <input id="suggest-address" type="text" />
+        </label>
+        <label>
+          <span>Telephone</span>
+          <input id="suggest-phone" type="text" />
+        </label>
+        <label>
+          <span>Horaires</span>
+          <input id="suggest-hours" type="text" />
+        </label>
+        <div class="coord-location">
+          <div class="coord-location-title">Localisation</div>
+          <div class="coord-location-actions">
+            <button id="suggest-auto" class="btn btn-outline-secondary btn-sm" type="button">Utiliser ma position</button>
+            <button id="suggest-map" class="btn btn-outline-secondary btn-sm" type="button">Choisir sur la carte</button>
+            <button id="suggest-manual" class="btn btn-outline-secondary btn-sm" type="button">Saisir manuellement</button>
+          </div>
+          <div id="suggest-status" class="small text-muted">Localisation automatique en cours...</div>
+        </div>
+        <label>
+          <span>Latitude</span>
+          <input id="suggest-lat" type="number" step="0.00001" placeholder="ex: 6.4969" required />
+        </label>
+        <label>
+          <span>Longitude</span>
+          <input id="suggest-lng" type="number" step="0.00001" placeholder="ex: 2.6036" required />
+        </label>
+        <label>
+          <span>Commentaire</span>
+          <textarea id="suggest-comment" rows="3"></textarea>
+        </label>
+        <div id="suggest-error" class="text-danger small" role="status" aria-live="polite"></div>
+        <div class="coord-actions">
+          <button id="suggest-cancel" class="btn btn-outline-secondary" type="button">Annuler</button>
+          <button class="btn btn-primary" type="submit">Envoyer</button>
         </div>
       </form>
     </div>

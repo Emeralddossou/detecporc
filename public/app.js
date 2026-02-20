@@ -12,6 +12,8 @@ let userPosition = null;
 let map;
 let userMarker;
 let markersLayer;
+let mapPickTarget = null;
+let suggestDraft = null;
 
 const elements = {
   results: document.getElementById('results'),
@@ -28,7 +30,27 @@ const elements = {
   coordLat: document.getElementById('coord-lat'),
   coordLng: document.getElementById('coord-lng'),
   coordError: document.getElementById('coord-error'),
-  coordCancel: document.getElementById('coord-cancel')
+  coordCancel: document.getElementById('coord-cancel'),
+  coordStatus: document.getElementById('coord-status'),
+  coordAuto: document.getElementById('coord-auto'),
+  coordMap: document.getElementById('coord-map'),
+  coordManual: document.getElementById('coord-manual'),
+  suggestModal: document.getElementById('suggest-modal'),
+  suggestForm: document.getElementById('suggest-form'),
+  suggestName: document.getElementById('suggest-name'),
+  suggestAddress: document.getElementById('suggest-address'),
+  suggestPhone: document.getElementById('suggest-phone'),
+  suggestHours: document.getElementById('suggest-hours'),
+  suggestLat: document.getElementById('suggest-lat'),
+  suggestLng: document.getElementById('suggest-lng'),
+  suggestComment: document.getElementById('suggest-comment'),
+  suggestError: document.getElementById('suggest-error'),
+  suggestCancel: document.getElementById('suggest-cancel'),
+  suggestAuto: document.getElementById('suggest-auto'),
+  suggestMap: document.getElementById('suggest-map'),
+  suggestManual: document.getElementById('suggest-manual'),
+  suggestStatus: document.getElementById('suggest-status'),
+  btnSuggest: document.getElementById('btn-suggest')
 };
 
 function toRad(deg) {
@@ -71,6 +93,155 @@ function estimateTravel(distanceMeters) {
   };
 }
 
+function setMapPickMode(target) {
+  mapPickTarget = target;
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
+  if (target) {
+    mapEl.classList.add('map-pick');
+    elements.mapStatus.textContent = 'Clique sur la carte pour choisir la localisation.';
+  } else {
+    mapEl.classList.remove('map-pick');
+    elements.mapStatus.textContent = 'Carte chargee';
+  }
+}
+
+function applyPickedLocation(target, lat, lng) {
+  if (target === 'user') {
+    userPosition = { lat, lng };
+    elements.coordLat.value = lat.toFixed(5);
+    elements.coordLng.value = lng.toFixed(5);
+    elements.coordStatus.textContent = 'Localisation choisie sur la carte.';
+    closeCoordModal();
+    updateUI();
+  }
+
+  if (target === 'suggest') {
+    if (suggestDraft) {
+      suggestDraft.lat = lat.toFixed(5);
+      suggestDraft.lng = lng.toFixed(5);
+      openSuggestModal();
+    } else {
+      elements.suggestLat.value = lat.toFixed(5);
+      elements.suggestLng.value = lng.toFixed(5);
+    }
+    elements.suggestStatus.textContent = 'Localisation choisie sur la carte.';
+  }
+}
+
+function startAutoLocation(target) {
+  if (!navigator.geolocation) {
+    handleLocationFailure(target, 'Geolocalisation non supportee.');
+    return;
+  }
+
+  if (target === 'user') {
+    elements.status.textContent = 'Recherche de la position...';
+    elements.coordStatus.textContent = 'Recherche automatique en cours...';
+  }
+
+  if (target === 'suggest') {
+    elements.suggestStatus.textContent = 'Recherche automatique en cours...';
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      if (target === 'user') {
+        userPosition = { lat, lng };
+        elements.coordLat.value = lat.toFixed(5);
+        elements.coordLng.value = lng.toFixed(5);
+        elements.coordStatus.textContent = 'Localisation automatique reussie.';
+        closeCoordModal();
+        updateUI();
+        return;
+      }
+
+      if (target === 'suggest') {
+        elements.suggestLat.value = lat.toFixed(5);
+        elements.suggestLng.value = lng.toFixed(5);
+        elements.suggestStatus.textContent = 'Localisation automatique reussie.';
+      }
+    },
+    (err) => {
+      console.error('Erreur geoloc:', err);
+      handleLocationFailure(target, 'Localisation automatique indisponible.');
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 30 * 1000
+    }
+  );
+}
+
+function handleLocationFailure(target, message) {
+  if (target === 'user') {
+    elements.status.textContent = message;
+    elements.coordStatus.textContent = `${message} Choisis sur la carte ou saisis manuellement.`;
+    openCoordModal();
+  }
+
+  if (target === 'suggest') {
+    elements.suggestStatus.textContent = `${message} Choisis sur la carte ou saisis manuellement.`;
+  }
+}
+
+function openCoordModal() {
+  elements.coordError.textContent = '';
+  elements.coordModal.classList.add('is-open');
+  elements.coordModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeCoordModal() {
+  elements.coordModal.classList.remove('is-open');
+  elements.coordModal.setAttribute('aria-hidden', 'true');
+}
+
+function openSuggestModal() {
+  elements.suggestError.textContent = '';
+  if (!suggestDraft) {
+    elements.suggestForm.reset();
+  } else {
+    elements.suggestName.value = suggestDraft.nom;
+    elements.suggestAddress.value = suggestDraft.adresse;
+    elements.suggestPhone.value = suggestDraft.telephone;
+    elements.suggestHours.value = suggestDraft.horaires;
+    elements.suggestLat.value = suggestDraft.lat;
+    elements.suggestLng.value = suggestDraft.lng;
+    elements.suggestComment.value = suggestDraft.commentaire;
+  }
+  elements.suggestStatus.textContent = 'Localisation automatique en cours...';
+  elements.suggestModal.classList.add('is-open');
+  elements.suggestModal.setAttribute('aria-hidden', 'false');
+  elements.suggestName.focus();
+  if (!suggestDraft) {
+    startAutoLocation('suggest');
+  }
+}
+
+function closeSuggestModal() {
+  elements.suggestModal.classList.remove('is-open');
+  elements.suggestModal.setAttribute('aria-hidden', 'true');
+}
+
+function stashSuggestForm() {
+  suggestDraft = {
+    nom: elements.suggestName.value.trim(),
+    adresse: elements.suggestAddress.value.trim(),
+    telephone: elements.suggestPhone.value.trim(),
+    horaires: elements.suggestHours.value.trim(),
+    lat: elements.suggestLat.value,
+    lng: elements.suggestLng.value,
+    commentaire: elements.suggestComment.value.trim()
+  };
+}
+
+function clearSuggestDraft() {
+  suggestDraft = null;
+}
+
 function initMap() {
   const center = [6.4969, 2.6036];
   map = L.map('map', { zoomControl: true }).setView(center, 13);
@@ -81,6 +252,13 @@ function initMap() {
   }).addTo(map);
 
   markersLayer = L.layerGroup().addTo(map);
+
+  map.on('click', (event) => {
+    if (!mapPickTarget) return;
+    const { lat, lng } = event.latlng;
+    applyPickedLocation(mapPickTarget, lat, lng);
+    setMapPickMode(null);
+  });
 }
 
 async function fetchPoints() {
@@ -273,42 +451,13 @@ function updateUI() {
   }
 }
 function requestGeolocation() {
-  if (!navigator.geolocation) {
-    alert('Geolocalisation non supportee par ton navigateur.');
-    return;
-  }
-
-  elements.status.textContent = 'Recherche de la position...';
-
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      userPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      updateUI();
-    },
-    (err) => {
-      console.error('Erreur geoloc:', err);
-      if (err.code === 1) {
-        elements.status.textContent = 'Acces refuse a la localisation.';
-        alert('Tu as refuse le partage de position. Tu peux saisir manuellement tes coordonnees.');
-      } else if (err.code === 2) {
-        elements.status.textContent = 'Position introuvable.';
-        alert('Impossible de determiner la position.');
-      } else {
-        elements.status.textContent = 'Erreur de localisation.';
-        alert('Erreur lors de la recuperation de la position.');
-      }
-      updateUI();
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 30 * 1000
-    }
-  );
+  startAutoLocation('user');
 }
 
 function setupUI() {
-  document.getElementById('btn-get').addEventListener('click', requestGeolocation);
+  document.getElementById('btn-get').addEventListener('click', () => {
+    startAutoLocation('user');
+  });
 
   document.getElementById('btn-refresh').addEventListener('click', () => {
     if (userPosition) {
@@ -327,25 +476,28 @@ function setupUI() {
   });
 
   document.getElementById('btn-manual').addEventListener('click', () => {
-    elements.coordError.textContent = '';
     elements.coordForm.reset();
-    elements.coordModal.classList.add('is-open');
-    elements.coordModal.setAttribute('aria-hidden', 'false');
+    elements.coordStatus.textContent = 'Localisation automatique en cours...';
+    openCoordModal();
+    startAutoLocation('user');
     elements.coordLat.focus();
+  });
+
+  elements.btnSuggest.addEventListener('click', () => {
+    clearSuggestDraft();
+    openSuggestModal();
   });
 
   elements.filterSearch.addEventListener('input', updateUI);
   elements.filterDistance.addEventListener('input', updateUI);
 
   elements.coordCancel.addEventListener('click', () => {
-    elements.coordModal.classList.remove('is-open');
-    elements.coordModal.setAttribute('aria-hidden', 'true');
+    closeCoordModal();
   });
 
   elements.coordModal.addEventListener('click', (event) => {
     if (event.target === elements.coordModal) {
-      elements.coordModal.classList.remove('is-open');
-      elements.coordModal.setAttribute('aria-hidden', 'true');
+      closeCoordModal();
     }
   });
 
@@ -358,15 +510,99 @@ function setupUI() {
       return;
     }
     userPosition = { lat, lng };
-    elements.coordModal.classList.remove('is-open');
-    elements.coordModal.setAttribute('aria-hidden', 'true');
+    closeCoordModal();
     updateUI();
+  });
+
+  elements.coordAuto.addEventListener('click', () => {
+    startAutoLocation('user');
+  });
+
+  elements.coordMap.addEventListener('click', () => {
+    closeCoordModal();
+    setMapPickMode('user');
+  });
+
+  elements.coordManual.addEventListener('click', () => {
+    elements.coordLat.focus();
+  });
+
+  elements.suggestCancel.addEventListener('click', () => {
+    clearSuggestDraft();
+    closeSuggestModal();
+  });
+
+  elements.suggestModal.addEventListener('click', (event) => {
+    if (event.target === elements.suggestModal) {
+      clearSuggestDraft();
+      closeSuggestModal();
+    }
+  });
+
+  elements.suggestAuto.addEventListener('click', () => {
+    startAutoLocation('suggest');
+  });
+
+  elements.suggestMap.addEventListener('click', () => {
+    stashSuggestForm();
+    closeSuggestModal();
+    setMapPickMode('suggest');
+  });
+
+  elements.suggestManual.addEventListener('click', () => {
+    elements.suggestLat.focus();
+  });
+
+  elements.suggestForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    elements.suggestError.textContent = '';
+    const lat = parseFloat(elements.suggestLat.value);
+    const lng = parseFloat(elements.suggestLng.value);
+    if (!elements.suggestName.value.trim()) {
+      elements.suggestError.textContent = 'Le nom est obligatoire.';
+      return;
+    }
+    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      elements.suggestError.textContent = 'Coordonnees invalides.';
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nom: elements.suggestName.value.trim(),
+          adresse: elements.suggestAddress.value.trim(),
+          telephone: elements.suggestPhone.value.trim(),
+          horaires: elements.suggestHours.value.trim(),
+          lat,
+          lng,
+          commentaire: elements.suggestComment.value.trim()
+        })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || 'Erreur lors de lenvoi.');
+      }
+      clearSuggestDraft();
+      closeSuggestModal();
+      alert('Merci ! Ta proposition a ete envoyee pour validation.');
+    } catch (error) {
+      elements.suggestError.textContent = error.message;
+    }
   });
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && elements.coordModal.classList.contains('is-open')) {
-      elements.coordModal.classList.remove('is-open');
-      elements.coordModal.setAttribute('aria-hidden', 'true');
+      closeCoordModal();
+    }
+    if (event.key === 'Escape' && elements.suggestModal.classList.contains('is-open')) {
+      clearSuggestDraft();
+      closeSuggestModal();
+    }
+    if (event.key === 'Escape' && mapPickTarget) {
+      setMapPickMode(null);
     }
   });
 }

@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'points.json');
+const PENDING_FILE = path.join(__dirname, 'data', 'pending.json');
 
 const ADMIN_USER = 'admindp';
 // Hash scrypt du mot de passe "dp26#porc" avec le sel ci-dessous.
@@ -130,12 +131,19 @@ const DEFAULT_POINTS = [
   }
 ];
 
-async function ensureDataFile() {
+async function ensureDataFiles() {
   try {
     await fs.access(DATA_FILE);
   } catch (err) {
     await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
     await fs.writeFile(DATA_FILE, JSON.stringify(DEFAULT_POINTS, null, 2));
+  }
+
+  try {
+    await fs.access(PENDING_FILE);
+  } catch (err) {
+    await fs.mkdir(path.dirname(PENDING_FILE), { recursive: true });
+    await fs.writeFile(PENDING_FILE, JSON.stringify([], null, 2));
   }
 }
 
@@ -148,6 +156,16 @@ async function readPoints() {
 
 async function writePoints(points) {
   await fs.writeFile(DATA_FILE, JSON.stringify(points, null, 2));
+}
+
+async function readPending() {
+  const raw = await fs.readFile(PENDING_FILE, 'utf8');
+  const sanitized = raw.replace(/^\uFEFF/, '');
+  return JSON.parse(sanitized);
+}
+
+async function writePending(points) {
+  await fs.writeFile(PENDING_FILE, JSON.stringify(points, null, 2));
 }
 
 function requireAdmin(req, res, next) {
@@ -182,6 +200,31 @@ app.get('/api/points', async (req, res) => {
   res.json({ ok: true, points });
 });
 
+app.post('/api/suggest', async (req, res) => {
+  const { nom, lat, lng, adresse, telephone, horaires, commentaire } = req.body || {};
+  if (!nom || typeof lat !== 'number' || typeof lng !== 'number') {
+    return res.status(400).json({ ok: false, error: 'Nom, latitude et longitude sont obligatoires.' });
+  }
+
+  const pending = await readPending();
+  const nextId = pending.length ? Math.max(...pending.map((p) => p.id || 0)) + 1 : 1;
+  const newPoint = {
+    id: nextId,
+    nom,
+    lat,
+    lng,
+    adresse: adresse || '',
+    telephone: telephone || '',
+    horaires: horaires || '',
+    commentaire: commentaire || '',
+    createdAt: new Date().toISOString()
+  };
+
+  pending.push(newPoint);
+  await writePending(pending);
+  res.status(201).json({ ok: true, point: newPoint });
+});
+
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body || {};
   const isValid = username === ADMIN_USER && typeof password === 'string' && isValidPassword(password);
@@ -203,6 +246,11 @@ app.post('/api/logout', (req, res) => {
 app.get('/api/admin/points', requireAdmin, async (req, res) => {
   const points = await readPoints();
   res.json({ ok: true, points });
+});
+
+app.get('/api/admin/pending', requireAdmin, async (req, res) => {
+  const pending = await readPending();
+  res.json({ ok: true, pending });
 });
 
 app.post('/api/admin/points', requireAdmin, async (req, res) => {
@@ -268,7 +316,38 @@ app.delete('/api/admin/points/:id', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
-ensureDataFile().then(() => {
+app.post('/api/admin/pending/:id/approve', requireAdmin, async (req, res) => {
+  const pendingId = Number(req.params.id);
+  const pending = await readPending();
+  const idx = pending.findIndex((p) => p.id === pendingId);
+  if (idx === -1) {
+    return res.status(404).json({ ok: false, error: 'Proposition introuvable.' });
+  }
+
+  const points = await readPoints();
+  const nextId = points.length ? Math.max(...points.map((p) => p.id || 0)) + 1 : 1;
+  const approved = { ...pending[idx], id: nextId };
+
+  points.push(approved);
+  pending.splice(idx, 1);
+  await writePoints(points);
+  await writePending(pending);
+  res.json({ ok: true, point: approved });
+});
+
+app.delete('/api/admin/pending/:id', requireAdmin, async (req, res) => {
+  const pendingId = Number(req.params.id);
+  const pending = await readPending();
+  const nextPending = pending.filter((p) => p.id !== pendingId);
+  if (nextPending.length === pending.length) {
+    return res.status(404).json({ ok: false, error: 'Proposition introuvable.' });
+  }
+
+  await writePending(nextPending);
+  res.json({ ok: true });
+});
+
+ensureDataFiles().then(() => {
   app.listen(PORT, () => {
     console.log(`DETECPORC server running on http://localhost:${PORT}`);
   });
