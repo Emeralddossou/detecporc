@@ -22,6 +22,7 @@ const elements = {
   statTotal: document.getElementById('stat-total'),
   statNearest: document.getElementById('stat-nearest'),
   statNearestName: document.getElementById('stat-nearest-name'),
+  statNearestDetails: document.getElementById('stat-nearest-details'),
   mapStatus: document.getElementById('map-status'),
   filterSearch: document.getElementById('filter-search'),
   filterDistance: document.getElementById('filter-distance'),
@@ -306,12 +307,17 @@ function updateStats(enriched) {
   if (!userPosition || enriched.length === 0) {
     elements.statNearest.textContent = '-';
     elements.statNearestName.textContent = '-';
+    elements.statNearestDetails.textContent = '';
     return;
   }
 
   const nearest = enriched.slice().sort((a, b) => a.distance - b.distance)[0];
+  const eta = estimateTravel(nearest.distance);
   elements.statNearest.textContent = formatDistance(nearest.distance);
   elements.statNearestName.textContent = nearest.nom;
+  elements.statNearestDetails.textContent =
+    `${nearest.adresse || 'Adresse non renseignee'} · ${nearest.telephone || 'Telephone non renseigne'} · ` +
+    `Marche: ${eta.walk} · Moto: ${eta.moto}`;
 }
 
 function updateMapMarkers(list) {
