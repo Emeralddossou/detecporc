@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DETECPORC — Trouver la viande de porc la plus proche</title>
+
+  <!-- Bootstrap CSS (CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Leaflet (carte légère OpenStreetMap) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="favicon.jpg">
+
+  <style>
+    /* Palette : marron, jaune, rouge, blanc */
+    :root{
+      --bg-brown: #6b3f2b;
+      --accent-yellow: #f6c85f;
+      --accent-red: #d64545;
+      --card-white: #fffaf6;
+      --muted: #7a6a66;
+    }
+
+    body{
+      background: linear-gradient(180deg, #fffaf6 0%, #fff9f2 100%);
+      color: #3b2b23;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      padding-bottom: 40px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:.6rem;
+      font-weight:700;
+      color:var(--bg-brown);
+    }
+    .brand .logo{
+      width:46px;
+      height:46px;
+      border-radius:10px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,var(--accent-yellow),var(--accent-red));
+      color:white;
+      font-size:22px;
+      box-shadow: 0 6px 18px rgba(107,63,43,0.16);
+    }
+
+    /* Carte */
+    #map { height: 320px; border-radius:12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+
+    /* Carte + liste layout */
+    .panel {
+      background: linear-gradient(180deg, var(--card-white), #fff9f0);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 6px 18px rgba(107,63,43,0.06);
+    }
+
+    .place-card {
+      border-left: 4px solid var(--accent-yellow);
+      padding: .6rem;
+      border-radius: 8px;
+      background: white;
+      margin-bottom: .6rem;
+    }
+    .place-card:hover {
+      cursor: pointer;
+      background: var(--accent-yellow);
+    }
+    .place-card .name {
+      font-weight:700;
+      color: var(--bg-brown);
+    }
+    .distance-pill {
+      background: rgba(214,69,69,0.08);
+      color: var(--accent-red);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight:600;
+      font-size:.85rem;
+    }
+
+    #user-coords, #user-status {
+      font-size: 20px;
+      color: var(--bg-brown);
+    }
+    #user-status {
+      font-weight: bolder;
+    }
+
+    .small-muted { color:var(--muted); font-size:.88rem; }
+
+    /* responsive tweaks */
+    @media (min-width: 992px){
+      #map{ height:420px; }
+    }
+
+    /* fun culinary icons */
+    .utensil {
+      width:26px; height:26px; border-radius:6px; display:grid; place-items:center;
+      background:rgba(107,63,43,0.06); color:var(--bg-brown);
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <header class="d-flex align-items-center justify-content-between mb-3">
+      <div class="brand">
+        <div class="logo">DP</div>
+        <div>
+          <div style="font-size:1.1rem">DETECPORC</div>
+          <div class="small-muted">Trouve les points de vente de viande de porc proches 🍖🐷</div>
+        </div>
+      </div>
+
+      <div>
+        <button id="btn-get" class="btn btn-sm" style="font-size: 25px; background:var(--bg-brown); color:white;">
+          <i class="bi bi-compass"></i> Me Localiser
+        </button>
+        <button id="btn-refresh" style="font-size: 25px;" class="btn btn-sm btn-outline-secondary" title="Rafraîchir la liste">⟳</button>
+      </div>
+    </header>
+
+    <main class="row g-3">
+      <section class="col-12 col-lg-7">
+        <div class="panel">
+          <div class="d-flex align-items-start justify-content-between mb-2">
+            <div>
+              <div class="small-muted">Carte</div>
+              <h5 style="margin:0">Carte interactive</h5>
+            </div>
+            <div class="text-end small-muted">
+              <div id="user-coords">Position inconnue</div>
+              <div id="user-status" class="small-muted">Partage ta position pour voir les points proches</div>
+            </div>
+          </div>
+
+          <div id="map" aria-label="Carte des points de vente"></div>
+
+          <div class="mt-3 d-flex gap-2">
+            <button id="btn-manual" class="btn btn-light btn-sm"><i class="bi bi-geo-alt-fill"></i> Saisir manuellement</button>
+            <button id="btn-show-all" class="btn btn-outline-secondary btn-sm">Montrer tous</button>
+            <div class="ms-auto small-muted align-self-center">Astuce : clique sur un marqueur pour plus d'infos</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="col-12 col-lg-5">
+        <div class="panel">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div>
+              <div class="small-muted">Résultats</div>
+              <h5 style="margin:0">Points de vente proches</h5>
+            </div>
+            <div class="text-end">
+              <div class="small-muted">Tri par proximité</div>
+            </div>
+          </div>
+
+          <div id="results" role="list" aria-live="polite">
+            <!-- cartes de résultats injectées ici -->
+            <div class="text-muted small">Aucune position partagée — clique sur "Localiser" pour commencer.</div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="mt-4 text-center small-muted">
+      © DETECPORC — Trouver la viande de porc la plus proche
+    </footer>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- App JS -->
+  <script src="app.js"></script>
+</body>
+</html>
