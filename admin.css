@@ -1,0 +1,163 @@
+﻿:root {
+  --ink: #231a15;
+  --muted: #6d5c55;
+  --accent: #d1603d;
+  --accent-strong: #8d3c2a;
+  --bg: #f6efe9;
+  --card: #ffffff;
+  --border: #ead9ce;
+  --shadow: 0 14px 30px rgba(55, 30, 20, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: linear-gradient(130deg, #f8efe7 0%, #f0e4db 100%);
+  color: var(--ink);
+}
+
+.admin-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 16px 48px;
+}
+
+.admin-header {
+  background: linear-gradient(120deg, #6b3f2b 0%, #9f4f36 100%);
+  color: white;
+  border-radius: 22px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow);
+}
+
+.admin-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  color: #f3e7e0;
+}
+
+.admin-subtitle {
+  color: #f2e7e0;
+  margin-top: 8px;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-panel {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 24px;
+  margin-top: 24px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.admin-panel.hidden {
+  display: none;
+}
+
+.admin-form {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.admin-form input,
+.admin-form textarea {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  font-size: 1rem;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.panel-actions input {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.points-list {
+  display: grid;
+  gap: 12px;
+}
+
+.point-card {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 14px;
+  background: #fffdfb;
+}
+
+.point-card h3 {
+  font-size: 1.1rem;
+  margin: 0 0 6px;
+}
+
+.point-meta {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.point-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
